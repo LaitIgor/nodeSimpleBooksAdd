@@ -16,9 +16,9 @@ exports.getProducts = (req, res, next) => {
 exports.getProduct = (req, res, next) => {
   const prodId = req.params.productId;
   // ALternative with findAll
-  Product.findAll({where: {id: prodId}})
-  .then(res => console.log('FIND ALL PLEASE', res[0]))
-  .catch(err => console.log(err))
+  // Product.findAll({where: {id: prodId}})
+  // .then(res => console.log('FIND ALL PLEASE', res[0]))
+  // .catch(err => console.log(err))
   // Find single
   Product.findByPk(prodId)
     .then((product) => {
