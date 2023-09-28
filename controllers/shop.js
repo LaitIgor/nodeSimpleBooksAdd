@@ -1,8 +1,9 @@
 const Product = require('../models/product');
 
 exports.getProducts = (req, res, next) => {
-  Product.findAll()
+  Product.fetchAll()
     .then(products => {
+      console.log('Prods to render', products[0]);
       res.render('shop/product-list', {
         prods: products,
         pageTitle: 'All Products',
@@ -13,13 +14,9 @@ exports.getProducts = (req, res, next) => {
 };
 
 exports.getProduct = (req, res, next) => {
+  console.log('LETS SEEEEE!!!!');
   const prodId = req.params.productId;
-  // ALternative with findAll
-  // Product.findAll({where: {id: prodId}})
-  // .then(res => console.log('FIND ALL PLEASE', res[0]))
-  // .catch(err => console.log(err))
-  // Find single
-  Product.findByPk(prodId)
+  Product.findById(prodId)
     .then((product) => {
       console.log('PRODUCT BY ID', product);
       res.render('shop/product-detail', {
@@ -32,7 +29,8 @@ exports.getProduct = (req, res, next) => {
 };
 
 exports.getIndex = (req, res, next) => {
-  Product.findAll()
+  console.log('GET INDEX');
+  Product.fetchAll()
     .then((products) => {
       res.render('shop/index', {
         prods: products,

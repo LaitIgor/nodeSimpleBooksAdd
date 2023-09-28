@@ -1,23 +1,68 @@
 const getDb = require('../util/database').getDb;
+const { ObjectId } = require('mongodb');
 
 class Product {
-  constructor(title, price, description, imageUrl) {
+  constructor(title, price, description, imageUrl, id) {
     this.title = title;
     this.price = price;
     this.description = description;
     this.imageUrl = imageUrl;
+    this._id = id ? new ObjectId(id) : null;
   }
 
   save() {
-    // Database
     const db = getDb();
+    let dbOp;
+    console.log('Save!');
+    if (this._id) {
+      console.log('IF!');
+      // Edit
+      // find element and replace  or $set to this, means replace all fields to current ones
+      dbOp = db.collection('products').updateOne({_id: this._id}, {$set: this})
+    } else {
+      console.log('ELSE');
+      dbOp = db.collection('products').insertOne(this)
+    }
+    // Database
+    
     // Collection
-    db.collection('products').insertOne(this)
-      .then((result) => {
-        console.log(result);
-      })
-      .catch(err => console.log('err', err));
+    return dbOp
+        .then((result) => {
+            console.log(result);
+          })
+          .catch(err => console.log('err', err));
+  }
 
+  static fetchAll() {
+    const db = getDb();
+    return db.collection('products').find().toArray()
+          .then((products) => {
+            return products
+          })
+          .catch(err => console.log('err', err));
+  }
+
+  static findById(id) {
+    console.log('Finding by id which is: ', id);
+    const db = getDb();
+    return db.collection('products').find({_id: new ObjectId(id)}).next()
+    // Or like this
+    // return db.collection('products').findOne({_id: new ObjectId(id)})
+          .then((product) => {
+            console.log('products', product);
+            return product
+          })
+          .catch(err => console.log('err', err));
+  }
+
+  static deleteById(id) {
+    const db = getDb();
+    console.log('Entered delete with this id: ', id);
+    return db.collection('products').deleteOne({_id: new ObjectId(id)})
+          .then(() => {
+            console.log('Deleted');
+          })
+          .catch(err => console.log('err', err))
   }
 }
 
