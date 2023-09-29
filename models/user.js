@@ -45,7 +45,6 @@ class User {
     getCart() {
         const db = getDb();
         const productIds = this.cart.items.map(item => item.productId)
-        console.log('productIds', productIds);
         return db.collection('products').find({_id: {$in: productIds}}).toArray()
                 .then(products => {
                     return products.map(p => {
@@ -74,6 +73,41 @@ class User {
                 )
 
 
+    }
+
+    addOrder() {
+        const db = getDb();
+        return this.getCart()
+                .then((products) => {
+                    const order = {
+                        items: products,
+                        user: {
+                            _id: new ObjectId(this._id),
+                            name: this.name,
+                            email: this.email,
+                        }
+                    }
+
+                    return db.collection('orders').insertOne(order)
+                })
+                .then(result => {
+                    this.cart = {items: []}
+                    return db
+                    .collection('users')
+                    .updateOne({
+                        _id: new ObjectId(this._id)}, 
+                        {$set: {cart: {items: []}}}
+                    )
+                })
+                .catch(err => console.log('error is: ', err))
+    }
+
+    getOrders() {
+        const db = getDb();
+        return db
+                .collection('orders')
+                .find({'user._id': new ObjectId(this._id)})
+                .toArray();
     }
 
     static findById(userId) {
