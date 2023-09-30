@@ -14,7 +14,15 @@ exports.postAddProduct = (req, res, next) => {
   const description = req.body.description;
   const imageUrl = req.body.imageUrl;
 
-  const product = new Product({title, price, description, imageUrl}
+  const product = new Product(
+    {
+      title, 
+      price, 
+      description, 
+      imageUrl, 
+      // we pass whole user object, but mongoose will pick only _id of user!
+      userId: req.user
+    }
     );
    
   product.save()
@@ -81,7 +89,13 @@ exports.postEditProduct = (req, res, next) => {
 
 exports.getProducts = (req, res, next) => {
   Product.find()
+  // selects only certain fields from fetched object and excludes named ones
+    // .select('title price -_id')
+  // this function will fill userId with whole user object instead of simply id
+  // check console without this method and see difference between
+    // .populate('userId', 'name')
     .then(products => {
+      console.log('ALL products populated', products);
       res.render('admin/products', {
         prods: products,
         pageTitle: 'Admin Products',
