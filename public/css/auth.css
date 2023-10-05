@@ -1,0 +1,20 @@
+.login-form {
+    width: 20rem;
+    max-width: 90%;
+    margin: auto;
+    display: block;
+}
+
+.user-message {
+    margin: auto;
+    width: 75%;
+    text-align: center;
+    color: red;
+    border: 1px solid rgb(195, 18, 118);
+    background-color: #b52174;
+    
+}
+
+.user-message--error {
+    /* border: 2px solid red */
+}
