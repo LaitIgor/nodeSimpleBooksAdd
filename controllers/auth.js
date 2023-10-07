@@ -20,21 +20,41 @@ exports.getLogin = (req, res, next) => {
     path: '/login',
     pageTitle: 'Login',
     // extracting error message from Flash package using key
-    errorMessage: message
+    errorMessage: message,
+    oldInput: {email: '', password: ''},
+    validationErrors: [],
   });
 };
 
 exports.postLogin = (req, res, next) => {
   const email = req.body.email;
   const password = req.body.password;
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    console.log('errors.array()', errors.array());
+    return res.status(422).render('auth/login', {
+      path: '/login',
+      pageTitle: 'Login',
+      errorMessage: errors.array()[0].msg,
+      oldInput: {email, password},
+      validationErrors: errors.array(),
+    });
+  }
+
   User.findOne({
     email: email,
   })
     .then(user => {
       if (!user) {
         // Setting error message using Flash package
-        req.flash('error', 'Invalid email or password');
-        return res.redirect('/login');
+        return res.status(422).render('auth/login', {
+          path: '/login',
+          pageTitle: 'Login',
+          errorMessage: 'Invalid email or password',
+          oldInput: {email, password},
+          validationErrors: [{path: 'email'}, {path: 'password'}],
+        });
       }
       bcrypt.compare(password, user.password)
       // we enter then in both match and not match scenarios
@@ -50,8 +70,13 @@ exports.postLogin = (req, res, next) => {
               return res.redirect('/');
             })
           }
-          req.flash('error', 'Invalid email or password');
-          res.redirect('/login');
+          return res.status(422).render('auth/login', {
+            path: '/login',
+            pageTitle: 'Login',
+            errorMessage: 'Invalid user credentials',
+            oldInput: {email, password},
+            validationErrors: [],
+          });
         })
         // For errors
         .catch(err => {
@@ -82,20 +107,25 @@ exports.getSignup = (req, res, next) => {
     path: '/signup',
     pageTitle: 'Signup',
     errorMessage: message,
+    oldInput: {email: '', password: '', confirmPassword: ''},
+    validationErrors: []
   })
 }
 
 exports.postSignup = (req, res, next) => {
   const email = req.body.email;
   const password = req.body.password;
+  const confirmPassword = req.body.confirmPassword;
   const errors = validationResult(req);
-  
+
   if (!errors.isEmpty()) {
     console.log('errors.array()', errors.array());
     return res.status(422).render('auth/signup', {
       path: '/signup',
       pageTitle: 'Signup',
       errorMessage: errors.array()[0].msg,
+      oldInput: {email, password, confirmPassword},
+      validationErrors: errors.array(),
     });
   }
   // its an async func, thats why we return
