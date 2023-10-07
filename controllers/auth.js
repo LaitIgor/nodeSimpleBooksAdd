@@ -4,6 +4,7 @@ const User = require('../models/user');
 const nodemailer = require('nodemailer');
 const htmlText = `<h1>Hello from mailer</h1>`
 const transporterObj = require('../globalVars');
+const { validationResult } = require('express-validator');
 
 const transporter = nodemailer.createTransport(transporterObj)
 
@@ -70,35 +71,6 @@ exports.postLogout = (req, res, next) => {
   });
 };
 
-exports.postSignup = (req, res, next) => {
-  const email = req.body.email;
-  const password = req.body.password;
-  const confirmPassword = req.body.confirmPassword;
-   User.findOne({email: email})
-      .then(userDoc => {
-        if (userDoc) {
-          req.flash('error', 'E-mail exists already, please pick a differene one');
-          return res.redirect('/signup')
-        }
-        // its an async func, thats why we return
-        return bcrypt.hash(password, 12)
-        .then(hashedPass => {
-          const user = new User({
-            email,
-            password: hashedPass,
-            cart: {
-              items: []
-            }
-          });
-        return user.save();
-        })
-        .then(result => {
-          res.redirect('/login')
-        })
-      })
-      .catch(err => console.log(err))
-}
-
 exports.getSignup = (req, res, next) => {
   let message = req.flash('error');
   if (message.length > 0) {
@@ -111,6 +83,37 @@ exports.getSignup = (req, res, next) => {
     pageTitle: 'Signup',
     errorMessage: message,
   })
+}
+
+exports.postSignup = (req, res, next) => {
+  const email = req.body.email;
+  const password = req.body.password;
+  const errors = validationResult(req);
+  
+  if (!errors.isEmpty()) {
+    console.log('errors.array()', errors.array());
+    return res.status(422).render('auth/signup', {
+      path: '/signup',
+      pageTitle: 'Signup',
+      errorMessage: errors.array()[0].msg,
+    });
+  }
+  // its an async func, thats why we return
+  return bcrypt.hash(password, 12)
+      .then(hashedPass => {
+        const user = new User({
+          email,
+          password: hashedPass,
+          cart: {
+            items: []
+          }
+        });
+      return user.save();
+      })
+      .then(result => {
+        res.redirect('/login')
+      })
+      .catch(err => console.log(err))
 }
 
 exports.getReset = (req, res, next) => {
