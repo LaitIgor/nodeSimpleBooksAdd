@@ -66,15 +66,22 @@ exports.postEditProduct = (req, res, next) => {
 
     Product.findById(prodId)
       .then(product => {
+        // Ensure that only user who created product is deleting it
+        console.log(product.userId, 'product.userId');
+        console.log(req.user._id.toString(), 'req.user._id.toString()');
+        if(product.userId.toString() !== req.user._id.toString()) {
+          console.log('=======>> Forbidden Actions detected!!! <<=======');
+          return res.redirect('/login');
+        }
         product.title = updatedTitle;
         product.price = updatedPrice;
         product.description = updatedDesc;
         product.imageUrl = updatedImageUrl;
         return product.save()
-      })
-      .then(updtProduct => {
-        console.log('Updated product', updtProduct)
-        res.redirect('/admin/products')
+          .then(updtProduct => {
+            console.log('Updated product', updtProduct)
+            res.redirect('/admin/products')
+          })
       })
       .catch(err => console.warn('error', err))
 
@@ -90,7 +97,8 @@ exports.postEditProduct = (req, res, next) => {
 };
 
 exports.getProducts = (req, res, next) => {
-  Product.find()
+  // Find only products that were created by currently logged in user
+  Product.find({userId: req.user._id})
   // selects only certain fields from fetched object and excludes named ones
     // .select('title price -_id')
   // this function will fill userId with whole user object instead of simply id
@@ -111,7 +119,7 @@ exports.getProducts = (req, res, next) => {
 
 exports.postDeleteProduct = (req, res, next) => {
   const prodId = req.body.productId;
-  Product.findByIdAndRemove(prodId)
+  Product.deleteOne({_id: prodId, userId: req.user._id})
     .then(() => {
       res.redirect('/admin/products');
     })
