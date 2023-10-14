@@ -8,7 +8,7 @@
    <%- include('../includes/navigation.ejs') %>
     <main>
         <% if (errorMessage) { %>
-            <div class="user-message user-message--error">1111<%= errorMessage %></div>
+            <div class="user-message user-message--error"><%= errorMessage %></div>
            <% } %>
         <form class="product-form" action="/admin/add-product" method="POST">
             <div class="form-control">

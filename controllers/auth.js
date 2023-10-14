@@ -143,7 +143,12 @@ exports.postSignup = (req, res, next) => {
       .then(result => {
         res.redirect('/login')
       })
-      .catch(err => console.log(err))
+      .catch(err => {
+        console.log('There was an error: ', err)
+        const error = new Error('Error')
+        error.httpStatusCode = 500;
+        return next(error);
+      });
 }
 
 exports.getReset = (req, res, next) => {
@@ -181,7 +186,7 @@ exports.postReset = (req, res, next) => {
         // req.flash('error', 'Email sent, all good!')
         // res.redirect('/')
         const email = req.body.email;
-        console.log('SENDING EMAIL to... ====>>>>', email);
+        console.log('SENDING EMAIL to... ====>>>>>>', email);
         return transporter.sendMail({
           from: 'Node books reset pass',
           to: email,
@@ -191,10 +196,15 @@ exports.postReset = (req, res, next) => {
 
         }).then(() => {
           console.log('Email sent!');
-        res.redirect('/login')
+        return res.redirect('/login')
       })
       })
-      .catch(err => console.log(err))
+      .catch(err => {
+        console.log('There was an error: ', err)
+        const error = new Error('Error')
+        error.httpStatusCode = 500;
+        return next(error);
+      });
   })
 }
 
@@ -219,7 +229,12 @@ exports.getNewPassword = (req, res, next) => {
       passwordToken: token
     })
   })
-  .catch(err => console.log('error is: ', err))
+  .catch(err => {
+    console.log('There was an error: ', err)
+    const error = new Error('Error')
+    error.httpStatusCode = 500;
+    return next(error);
+  });
   
 }
 
@@ -249,6 +264,11 @@ exports.postNewPassword = (req, res, next) => {
     .then(result => {
       res.redirect('/login')
     })
-    .catch(err => console.log('error is: ', err))
+    .catch(err => {
+      console.log('There was an error: ', err)
+      const error = new Error('Error')
+      error.httpStatusCode = 500;
+      return next(error);
+    });
 
 }

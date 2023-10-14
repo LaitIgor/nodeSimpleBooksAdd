@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Product = require('../models/product');
 const { validationResult } = require('express-validator');
 
@@ -54,9 +55,30 @@ exports.postAddProduct = (req, res, next) => {
    
   product.save()
     .then(() => {
+      console.log('Product created!');
       res.redirect('/admin/products');
     })
-    .catch(err => console.log(err, 'err'));
+    .catch(err => {
+      console.log('AN ERROR OCCURED: ')
+      console.log(err, 'err')
+      // return res.status(500).render('admin/add-product', {
+      //   pageTitle: 'Add Product',
+      //   path: '/admin/add-product',
+      //   editing: false,
+      //   hasError: true,
+      //   product: {
+      //     title,
+      //     imageUrl,
+      //     price,
+      //     description
+      //   },
+      //   errorMessage: 'Database operation failed, please try again.',
+      // });
+      // res.redirect('/500')
+      const error = new Error('Creating a produc failed', {cause: 'Cause of an error'})
+      error.httpStatusCode = 500;
+      return next(error);
+    });
 
  
 };
@@ -82,6 +104,11 @@ exports.getEditProduct = (req, res, next) => {
         errorMessage: null,
         validaTionErrors: [],
       });
+    })
+    .catch(err => {
+      const error = new Error('Creating a produc failed', {cause: 'Cause - editing failed'})
+      error.httpStatusCode = 500;
+      return next(error);
     })
 };
 
@@ -112,10 +139,6 @@ exports.postEditProduct = (req, res, next) => {
     });
   }
 
-  console.log('Does it ATLEAST PASS I|T?');
-  console.log('req.body: ', req.body);
-  console.log('FIND BY ID OF: ', prodId);
-
     Product.findById(prodId)
       .then(product => {
         // Ensure that only user who created product is deleting it
@@ -133,7 +156,12 @@ exports.postEditProduct = (req, res, next) => {
             res.redirect('/admin/products')
           })
       })
-      .catch(err => console.warn('ERROR WHILE SEARCHING A PRODUCT', err))
+      .catch(err => {
+        console.warn('ERROR WHILE SEARCHING A PRODUCT', err)
+        const error = new Error('Error')
+        error.httpStatusCode = 500;
+        return next(error);
+      })
 
   // const updatedProduct = new Product(
   //   prodId,
@@ -163,7 +191,12 @@ exports.getProducts = (req, res, next) => {
 
       })
     })
-    .catch(err => console.warn('err', err))
+    .catch(err => {
+      console.warn('err', err);
+      const error = new Error('Error')
+      error.httpStatusCode = 500;
+      return next(error);
+    })
 };
 
 exports.postDeleteProduct = (req, res, next) => {
@@ -172,5 +205,10 @@ exports.postDeleteProduct = (req, res, next) => {
     .then(() => {
       res.redirect('/admin/products');
     })
-    .catch(err => console.warn('err', err));
+    .catch(err => {
+      console.warn('err', err);
+        const error = new Error('Error')
+        error.httpStatusCode = 500;
+        return next(error);
+    });
   };

@@ -11,7 +11,8 @@ const flash = require('connect-flash');
 const errorController = require('./controllers/error');
 const User = require('./models/user');
 
-const MONGODB_URI = 'mongodb+srv://dbAdmin:Y1q60anPExyCCjJ6@cluster0.0oej2p1.mongodb.net/shop';
+const {MONGODB_URI} = require('./globalVars');
+
 
 const app = express();
 const store = new MongoDBStore({
@@ -43,19 +44,6 @@ app.use(csrfProtection)
 // pass messages between redirects using sessions
 app.use(flash());
 
-app.use((req, res, next) => {
-  if (!req.session.user) {
-    return next();
-  }
-  User.findById(req.session.user._id)
-    .then(user => {
-      req.user = user;
-      console.log('user is', user);
-      next();
-    })
-    .catch(err => console.log(err));
-});
-
 // this middleware provides all our req. with custom variables
 // to avoid add it to every single render method instead
 app.use((req, res, next) => {
@@ -64,11 +52,44 @@ app.use((req, res, next) => {
   next();
 })
 
+app.use((req, res, next) => {
+  // throw new Error('Dummy')
+  if (!req.session.user) {
+    return next();
+  }
+  User.findById(req.session.user._id)
+    .then(user => {
+      // *1 throw new Error('Dummy');
+      if (!user) return next();
+      req.user = user;
+      console.log('user is', user);
+      next();
+    })
+    .catch(err => {
+      // this will not trigger error handling
+      // throw new Error(err);
+      // this will if error is thrown in ASYNC code like above *1
+      next(new Error(err));
+    });
+});
+
 app.use('/admin', adminRoutes);
 app.use(shopRoutes);
 app.use(authRoutes);
 
+app.get('/500', errorController.get500)
+
 app.use(errorController.get404);
+
+app.use((error, req, res, next) => {
+  console.log('Cause of fail: ', error.cause,);
+  // res.redirect('/500')
+  res.status(500).render('500', { 
+    pageTitle: 'Server error', 
+    path: '/500', 
+    isAuthenticated: req.isLoggedIn 
+  });
+})
 
 mongoose
   .connect(MONGODB_URI)
