@@ -151,21 +151,27 @@ exports.postEditProduct = (req, res, next) => {
       
     });
   }
-
+console.log('prodId', prodId);
     Product.findById(prodId)
       .then(product => {
         // Ensure that only user who created product is deleting it
+        console.log('product', product);
+        console.log(11111);
         if(product.userId.toString() !== req.user._id.toString()) {
+          console.log('22222 IF');
           console.log('=======>> Forbidden Actions detected!!! <<=======');
           return res.redirect('/login');
         }
+        console.log(33333);
         product.title = updatedTitle;
         product.price = updatedPrice;
         product.description = updatedDesc;
         if (image) {
-          fileHelper.deleteFile(product.imageUrl);
+          console.log('IMAGE IFFFF');
+          fileHelper(product.imageUrl);
           product.imageUrl = image.path;
         }
+        console.log('BEFORE PRODUCT SAVE()');
         return product.save()
           .then(updtProduct => {
             console.log('Updated product', updtProduct)
